@@ -5,14 +5,14 @@ pipeline {
         jdk 'Java17'
         maven 'Maven3'
     }
-     environment {
-	    APP_NAME = "register-app-pipeline"
-            RELEASE = "1.0.0"
-            DOCKER_USER = "kanuri3411"
-            DOCKER_PASS = 'dockerhub'
-            IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
-            IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
-	    
+
+    environment {
+        APP_NAME = "register-app-pipeline"
+        RELEASE = "1.0.0"
+        DOCKER_USER = "kanuri3411"
+        DOCKER_PASS = 'dockerhub'
+        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
     }
 
     stages {
@@ -46,7 +46,7 @@ pipeline {
                     withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
                         sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar"
                     }
-                } // This closing brace was missing in your snippet
+                }
             }
         }
 
@@ -57,20 +57,27 @@ pipeline {
                 }    
             }
         }
+
         stage("Build & Push Docker Image") {
             steps {
                 script {
-                    docker.withRegistry('',DOCKER_PASS) {
-                        docker_image = docker.build "${IMAGE_NAME}"
-                    }
-
-                    docker.withRegistry('',DOCKER_PASS) {
+                    // Optimized to use a single registry block
+                    docker.withRegistry('', DOCKER_PASS) {
+                        def docker_image = docker.build("${IMAGE_NAME}")
                         docker_image.push("${IMAGE_TAG}")
                         docker_image.push('latest')
                     }
                 }
             }
+        }
 
-       }
+        stage("Trivy Scan") {
+            steps {
+                script {
+                    // Recommendation: Use your variable ${IMAGE_NAME} instead of a hardcoded string
+                    sh "docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${IMAGE_NAME}:latest --no-progress --scanners vuln --exit-code 0 --severity HIGH,CRITICAL --format table"
+                }
+            }
+        }
     }
 }
