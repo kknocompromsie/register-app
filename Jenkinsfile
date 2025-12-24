@@ -14,12 +14,12 @@ pipeline {
         }
 
         stage("Checkout from SCM") {
-            steps { // Fixed: 'steps' must be lowercase
+            steps {
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/kknocompromsie/register-app'
             }
         }
 
-        stage("Build Application") { // Fixed: Added missing opening double quote
+        stage("Build Application") {
             steps {
                 sh "mvn clean package"
             }
@@ -30,23 +30,23 @@ pipeline {
                 sh "mvn test"
             }
         }
+
         stage("SonarQube Analysis") {
-    steps {
-        script {
-            withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
-                // Using the full artifact ID prevents the "No plugin found" error
-                sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar"
+            steps {
+                script {
+                    withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
+                        sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar"
+                    }
+                } // This closing brace was missing in your snippet
             }
         }
-    }
-}
-        stage("Quality Gate"){
-           steps {
-               script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
-                }	
-            }
 
+        stage("Quality Gate") {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'jenkins-sonarqube-token'
+                }    
+            }
         }
     }
 }
