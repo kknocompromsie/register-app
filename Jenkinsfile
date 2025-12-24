@@ -61,7 +61,6 @@ pipeline {
         stage("Build & Push Docker Image") {
             steps {
                 script {
-                    // Optimized to use a single registry block
                     docker.withRegistry('', DOCKER_PASS) {
                         def docker_image = docker.build("${IMAGE_NAME}")
                         docker_image.push("${IMAGE_TAG}")
@@ -74,10 +73,10 @@ pipeline {
         stage("Trivy Scan") {
             steps {
                 script {
-                    // Recommendation: Use your variable ${IMAGE_NAME} instead of a hardcoded string
+                    // Corrected to use your IMAGE_NAME variable instead of the hardcoded ashfaque9x
                     sh "docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image ${IMAGE_NAME}:latest --no-progress --scanners vuln --exit-code 0 --severity HIGH,CRITICAL --format table"
                 }
             }
         }
-    }
-}
+    } // End of stages
+} // End of pipeline
