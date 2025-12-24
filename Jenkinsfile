@@ -15,7 +15,7 @@ pipeline {
 
         stage("Checkout from SCM") {
             steps { // Fixed: 'steps' must be lowercase
-                git branch: 'main', credentialsId: 'github', url: 'https://github.com/kknocompromise/Registered-App'
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/kknocompromise/register-app'
             }
         }
 
