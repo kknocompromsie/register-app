@@ -30,14 +30,15 @@ pipeline {
                 sh "mvn test"
             }
         }
-        stage("SonarQube Analysis"){
-           steps {
-	           script {
-		        withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
-                        sh "mvn sonar:sonar"
-		        }
-	           }	
-           }
-       }
+        stage("SonarQube Analysis") {
+    steps {
+        script {
+            withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
+                // Using the full artifact ID prevents the "No plugin found" error
+                sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.1.2184:sonar"
+            }
+        }
+    }
+}
     }
 }
